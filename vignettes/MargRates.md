@@ -1,18 +1,3 @@
----
-title: "MargRates: Marginal Event Rates and Stratified Comparisons"
-author: "Zachary McCaw"
-date: "2026-03-05"
-output:
-  rmarkdown::html_vignette:
-    keep_md: true
-vignette: >
-  %\VignetteIndexEntry{MargRates: Marginal Event Rates and Stratified Comparisons}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
----
-
-
-
 ## Introduction
 
 **MargRates** provides inference for marginal binary event rates when data are stratified. It is designed for two-arm comparisons where counts are reported by stratum (e.g., by baseline category or study site). The package estimates marginal event rates in each arm by weighting stratum-specific rates, then compares arms using the risk difference, risk ratio, and odds ratio, with optional bootstrap confidence intervals and permutation tests.
