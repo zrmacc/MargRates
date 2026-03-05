@@ -1,6 +1,8 @@
 Package: MargRates
 Title: Marginal Event Rates
 Version: 0.0.6
+Author: Zachary McCaw [aut, cre]
+Maintainer: Zachary McCaw <zmccaw@alumni.harvard.edu>
 Authors@R: 
     person(given = "Zachary",
            family = "McCaw",
@@ -11,8 +13,13 @@ Description: Provides functions for inference on marginal event rates, comparing
 Depends: R (>= 3.5.0)
 License: GPL-3
 Encoding: UTF-8
-LazyData: true
 Imports:
   methods,
   stats
-RoxygenNote: 7.1.1
+Suggests:
+  knitr,
+  rmarkdown,
+  testthat (>= 3.0.0)
+VignetteBuilder: knitr
+RoxygenNote: 7.3.3
+Config/testthat/edition: 3

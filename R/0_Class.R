@@ -8,7 +8,6 @@
 #' @name margRates-class
 #' @rdname margRates-class
 #' @exportClass margRates
-
 setClass(
   Class = "margRates",
   representation = representation(
@@ -31,36 +30,36 @@ setClass(
 #' @param x An object of class \code{margRates}.
 #' @param ... Unused.
 #' @export
-
 print.margRates <- function (x, ...) {
   
   # Rates.
   cat('Marginal Rates:\n')
-  show(x@Rates)
+  methods::show(x@Rates)
   cat('\n\n')
-  
+
   # Risk difference.
   cat('Risk Difference:\n')
-  show(x@RD)
+  methods::show(x@RD)
   cat('\n\n')
 
   # Risk ratio.
   cat('Risk Ratio:\n')
-  show(x@RR)
+  methods::show(x@RR)
   cat('\n\n')
-  
+
   # Odds ratio.
   cat('Odds Ratio:\n')
-  show(x@OR)
+  methods::show(x@OR)
   cat('\n\n')
-  
+
   # Permutation.
   if (nrow(x@Perm) > 0) {
     cat('Permutation test:\n')
-    show(x@Perm)
+    methods::show(x@Perm)
     cat('\n\n')
   }
-  
+
+  return(invisible(NULL))
 }
 
 # -----------------------------------------------------------------------------
@@ -71,11 +70,12 @@ print.margRates <- function (x, ...) {
 #'
 #' @param object An object of class \code{margRates}.
 #' @rdname fit-method
-#' @importFrom methods show
-
 setMethod(
   f = "show",
   signature = c(object = "margRates"),
-  definition = function(object) {print.margRates(x = object)}
+  definition = function(object) {
+    print.margRates(x = object)
+    return(invisible(NULL))
+  }
 )
 

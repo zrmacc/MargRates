@@ -1,0 +1,23 @@
+# IDE and project
+^.*\.Rproj$
+^\.Rproj\.user$
+^\.Rhistory$
+^\.DS_Store$
+^\.lintr$
+^\.\.Rcheck$
+
+# Git and CI
+^\.github$
+^\.git$
+^\.gitignore$
+
+# README build
+^README\.Rmd$
+^README\.cache$
+^README_cache$
+^README\.html$
+
+# Development (out-of-package)
+^Development$
+^doc$
+^Meta$

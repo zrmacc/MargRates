@@ -1,48 +1,30 @@
-#' Asymptotic Risk Difference
-#' 
-#' @param y0 Events per category in arm 0.
-#' @param n0 Subjects per category in arm 0.
-#' @param y1 Events per category in arm 1.
-#' @param n1 Subjects per category in arm 1.
-#' @param weights Stratum mixing weights.
-#' @param alpha Type 1 error rate.
-#' @importFrom stats pnorm qnorm
-#' @export 
-#' @return Data.frame containing:
-#' \itemize{
-#'   \item 'Est', the estimated risk difference, arm 1 minus arm 0.
-#'   \item The standard error 'SE'. 
-#'   \item The 'Lower' and 'Upper' confidence bound.
-#'   \item The asymptotic 'P' value.
-#' }
+# -----------------------------------------------------------------------------
+# Internal: compute risk difference from precomputed marginal rates.
+# -----------------------------------------------------------------------------
 
-RiskDiff <- function(y0, n0, y1, n1, weights = NULL, alpha = 0.05) {
-  
-  # Marginal rates.
-  marg <- MargRate(y0, n0, y1, n1, weights)
+.RiskDiffFromMarg <- function(marg, n0, n1, alpha = 0.05) {
+
   p0 <- marg$p0
   r0 <- marg$r0
   p1 <- marg$p1
   r1 <- marg$r1
   weights <- marg$weights
-  
-  # Risk Difference.
+
   risk_diff <- p1 - p0
-  
-  # Sampling variance of the risk difference.
   v <- sum(r1 * (1 - r1) / n1 * weights^2) + sum(r0 * (1 - r0) / n0 * weights^2)
   se <- sqrt(v)
-  
-  # Z-score and p-value.
-  z_stat <- risk_diff / se
-  p_val <- 2 * pnorm(q = abs(z_stat), lower.tail = FALSE)
-  
-  # CI.
-  crit <- qnorm(p = 1 - alpha / 2)
-  lower <- risk_diff - crit * se
-  upper <- risk_diff + crit * se
-  
-  # Output
+  if (se <= 0) {
+    se <- NA
+    p_val <- 1
+    lower <- upper <- risk_diff
+  } else {
+    z_stat <- risk_diff / se
+    p_val <- 2 * stats::pnorm(q = abs(z_stat), lower.tail = FALSE)
+    crit <- stats::qnorm(p = 1 - alpha / 2)
+    lower <- risk_diff - crit * se
+    upper <- risk_diff + crit * se
+  }
+
   out <- data.frame(
     "Stat" = "RiskDiff",
     "Est" = risk_diff,
@@ -56,53 +38,73 @@ RiskDiff <- function(y0, n0, y1, n1, weights = NULL, alpha = 0.05) {
 
 
 # -----------------------------------------------------------------------------
+# Asymptotic Risk Difference (exported).
+# -----------------------------------------------------------------------------
 
 #' Asymptotic Risk Difference
-#' 
+#'
 #' @param y0 Events per category in arm 0.
 #' @param n0 Subjects per category in arm 0.
 #' @param y1 Events per category in arm 1.
 #' @param n1 Subjects per category in arm 1.
 #' @param weights Stratum mixing weights.
-#' @param alpha Type 1 error rate.
-#' @importFrom stats pnorm qnorm
-#' @export 
+#' @param alpha Type I error rate.
+#' @export
 #' @return Data.frame containing:
 #' \itemize{
-#'   \item The odds ratio 'RR', arm 1 over arm 0.
-#'   \item The standard error 'SE'. 
-#'   \item The 'Lower' and 'Upper' confidence bound.
+#'   \item 'Est', the estimated risk difference, arm 1 minus arm 0.
+#'   \item The standard error 'SE'.
+#'   \item The 'Lower' and 'Upper' confidence bounds.
 #'   \item The asymptotic 'P' value.
 #' }
+RiskDiff <- function(y0, n0, y1, n1, weights = NULL, alpha = 0.05) {
 
-RiskRatio <- function(y0, n0, y1, n1, weights = NULL, alpha = 0.05) {
-  
-  # Marginal rates.
   marg <- MargRate(y0, n0, y1, n1, weights)
+  out <- .RiskDiffFromMarg(marg, n0, n1, alpha)
+  return(out)
+}
+
+
+# -----------------------------------------------------------------------------
+# Internal: compute risk ratio from precomputed marginal rates.
+# -----------------------------------------------------------------------------
+
+.RiskRatioFromMarg <- function(marg, n0, n1, alpha = 0.05) {
+
   p0 <- marg$p0
   r0 <- marg$r0
   p1 <- marg$p1
   r1 <- marg$r1
   weights <- marg$weights
-  
-  # Risk Difference.
+
+  if (p0 <= 0 || !is.finite(p0)) {
+    out <- data.frame(
+      "Stat" = "RiskRatio",
+      "Est" = NA_real_,
+      "SE" = NA_real_,
+      "Lower" = NA_real_,
+      "Upper" = NA_real_,
+      "P" = NA_real_
+    )
+    return(out)
+  }
+
   risk_ratio <- p1 / p0
-  
-  # Sampling variance of log risk ratio.
   v <- sum(r1 * (1 - r1) / n1 * weights^2) / p1^2 +
     sum(r0 * (1 - r0) / n0 * weights^2) / p0^2
   se <- sqrt(v)
-  
-  # Z-score and p-value.
-  z_stat <- log(risk_ratio) / se
-  p_val <- 2 * pnorm(q = abs(z_stat), lower.tail = FALSE)
-  
-  # CI.
-  crit <- qnorm(p = 1 - alpha / 2)
-  lower <- risk_ratio * exp(-crit * se)
-  upper <- risk_ratio * exp(+crit * se)
-  
-  # Output
+  if (se <= 0 || !is.finite(se)) {
+    se <- NA_real_
+    p_val <- 1
+    lower <- upper <- risk_ratio
+  } else {
+    z_stat <- log(risk_ratio) / se
+    p_val <- 2 * stats::pnorm(q = abs(z_stat), lower.tail = FALSE)
+    crit <- stats::qnorm(p = 1 - alpha / 2)
+    lower <- risk_ratio * exp(-crit * se)
+    upper <- risk_ratio * exp(+crit * se)
+  }
+
   out <- data.frame(
     "Stat" = "RiskRatio",
     "Est" = risk_ratio,
@@ -116,53 +118,75 @@ RiskRatio <- function(y0, n0, y1, n1, weights = NULL, alpha = 0.05) {
 
 
 # -----------------------------------------------------------------------------
+# Asymptotic Risk Ratio (exported).
+# -----------------------------------------------------------------------------
 
-#' Asymptotic Odds Ratio
-#' 
+#' Asymptotic Risk Ratio
+#'
 #' @param y0 Events per category in arm 0.
 #' @param n0 Subjects per category in arm 0.
 #' @param y1 Events per category in arm 1.
 #' @param n1 Subjects per category in arm 1.
 #' @param weights Stratum mixing weights.
-#' @param alpha Type 1 error rate.
-#' @importFrom stats pnorm qnorm
-#' @export 
+#' @param alpha Type I error rate.
+#' @export
 #' @return Data.frame containing:
 #' \itemize{
-#'   \item The odds ratio 'OR'.
-#'   \item The standard error 'SE'. 
-#'   \item The 'Lower' and 'Upper' confidence bound.
+#'   \item 'Est', the risk ratio (arm 1 over arm 0).
+#'   \item The standard error 'SE'.
+#'   \item The 'Lower' and 'Upper' confidence bounds.
 #'   \item The asymptotic 'P' value.
 #' }
+RiskRatio <- function(y0, n0, y1, n1, weights = NULL, alpha = 0.05) {
 
-OddsRatio <- function(y0, n0, y1, n1, weights = NULL, alpha = 0.05) {
-  
-  # Marginal rates.
   marg <- MargRate(y0, n0, y1, n1, weights)
+  out <- .RiskRatioFromMarg(marg, n0, n1, alpha)
+  return(out)
+}
+
+
+# -----------------------------------------------------------------------------
+# Internal: compute odds ratio from precomputed marginal rates.
+# -----------------------------------------------------------------------------
+
+.OddsRatioFromMarg <- function(marg, n0, n1, alpha = 0.05) {
+
   p0 <- marg$p0
   r0 <- marg$r0
   p1 <- marg$p1
   r1 <- marg$r1
   weights <- marg$weights
-  
-  # Marginal odds ratio.
-  odds_ratio <- p1 / (1 - p1) / (p0 / (1 - p0))
-  
-  # Sampling variance of log odds ratio.
-  v <- sum(r1 * (1 - r1) / n1 * weights^2) / (p1 * (1 - p1))^2 +
-    sum(r0 * (1 - r0) / n0 * weights^2) / (p0 * (1 - p0))^2
+
+  denom0 <- p0 * (1 - p0)
+  denom1 <- p1 * (1 - p1)
+  if (denom0 <= 0 || denom1 <= 0 || !is.finite(denom0) || !is.finite(denom1)) {
+    out <- data.frame(
+      "Stat" = "OddsRatio",
+      "Est" = NA_real_,
+      "SE" = NA_real_,
+      "Lower" = NA_real_,
+      "Upper" = NA_real_,
+      "P" = NA_real_
+    )
+    return(out)
+  }
+
+  odds_ratio <- (p1 / (1 - p1)) / (p0 / (1 - p0))
+  v <- sum(r1 * (1 - r1) / n1 * weights^2) / denom1^2 +
+    sum(r0 * (1 - r0) / n0 * weights^2) / denom0^2
   se <- sqrt(v)
-  
-  # Z-score and p-value.
-  z_stat <- log(odds_ratio) / se
-  p_val <- 2 * pnorm(q = abs(z_stat), lower.tail = FALSE)
-  
-  # CI.
-  crit <- qnorm(p = 1 - alpha / 2)
-  lower <- odds_ratio * exp(-crit * se)
-  upper <- odds_ratio * exp(+crit * se)
-  
-  # Output
+  if (se <= 0 || !is.finite(se)) {
+    se <- NA_real_
+    p_val <- 1
+    lower <- upper <- odds_ratio
+  } else {
+    z_stat <- log(odds_ratio) / se
+    p_val <- 2 * stats::pnorm(q = abs(z_stat), lower.tail = FALSE)
+    crit <- stats::qnorm(p = 1 - alpha / 2)
+    lower <- odds_ratio * exp(-crit * se)
+    upper <- odds_ratio * exp(+crit * se)
+  }
+
   out <- data.frame(
     "Stat" = "OddsRatio",
     "Est" = odds_ratio,
@@ -173,4 +197,33 @@ OddsRatio <- function(y0, n0, y1, n1, weights = NULL, alpha = 0.05) {
   )
   return(out)
 }
+
+
+# -----------------------------------------------------------------------------
+# Asymptotic Odds Ratio (exported).
+# -----------------------------------------------------------------------------
+
+#' Asymptotic Odds Ratio
+#'
+#' @param y0 Events per category in arm 0.
+#' @param n0 Subjects per category in arm 0.
+#' @param y1 Events per category in arm 1.
+#' @param n1 Subjects per category in arm 1.
+#' @param weights Stratum mixing weights.
+#' @param alpha Type I error rate.
+#' @export
+#' @return Data.frame containing:
+#' \itemize{
+#'   \item 'Est', the odds ratio.
+#'   \item The standard error 'SE'.
+#'   \item The 'Lower' and 'Upper' confidence bounds.
+#'   \item The asymptotic 'P' value.
+#' }
+OddsRatio <- function(y0, n0, y1, n1, weights = NULL, alpha = 0.05) {
+
+  marg <- MargRate(y0, n0, y1, n1, weights)
+  out <- .OddsRatioFromMarg(marg, n0, n1, alpha)
+  return(out)
+}
+
 

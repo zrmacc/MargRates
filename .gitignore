@@ -1,1 +1,20 @@
+# R and IDE
+.Rhistory
+.RData
 .Rproj.user
+*.Rproj
+..Rcheck
+
+# Cache directories (knitr, vignettes, etc.)
+*_cache/
+cache/
+\.Rproj\.user/
+
+# README build
+README_cache/
+README.html
+
+# Optional: uncomment to avoid committing generated files
+# README.Rmd
+/doc/
+/Meta/

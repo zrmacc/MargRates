@@ -17,14 +17,14 @@ RiskDiff(y0, n0, y1, n1, weights = NULL, alpha = 0.05)
 
 \item{weights}{Stratum mixing weights.}
 
-\item{alpha}{Type 1 error rate.}
+\item{alpha}{Type I error rate.}
 }
 \value{
 Data.frame containing:
 \itemize{
   \item 'Est', the estimated risk difference, arm 1 minus arm 0.
-  \item The standard error 'SE'. 
-  \item The 'Lower' and 'Upper' confidence bound.
+  \item The standard error 'SE'.
+  \item The 'Lower' and 'Upper' confidence bounds.
   \item The asymptotic 'P' value.
 }
 }

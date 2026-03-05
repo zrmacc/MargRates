@@ -14,29 +14,23 @@
 #'   \item 'Rates', data.frame of marginal rates.
 #'   \item 'Stats', data.frame of marginal contrasts.
 #' }
-
 CalcMargStats <- function(y0, n0, y1, n1, weights = NULL, alpha = 0.05) {
-  
-  # Marginal rates.
+
+  # Marginal rates (single call; reused for all three statistics).
   marg <- MargRate(y0, n0, y1, n1, weights)
   rates <- data.frame(
     "Arm" = c(0, 1),
     "N" = c(sum(n0), sum(n1)),
     "Rates" = c(marg$p0, marg$p1)
   )
-  
-  # Risk difference.
-  rd <- RiskDiff(y0, n0, y1, n1, weights, alpha)
-  
-  # Risk ratio.
-  rr <- RiskRatio(y0, n0, y1, n1, weights, alpha)
-  
-  # Odds ratio.
-  or <- OddsRatio(y0, n0, y1, n1, weights, alpha)
-  
-  # Output.
+
+  rd <- .RiskDiffFromMarg(marg, n0, n1, alpha)
+  rr <- .RiskRatioFromMarg(marg, n0, n1, alpha)
+  or <- .OddsRatioFromMarg(marg, n0, n1, alpha)
+
   out <- list()
   out$Rates <- rates
   out$Stats <- rbind(rd, rr, or)
   return(out)
 }
+

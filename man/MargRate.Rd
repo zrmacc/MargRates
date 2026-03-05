@@ -21,7 +21,7 @@ MargRate(y0, n0, y1, n1, weights = NULL)
 List containing:
 \itemize{
   \item Marginal rates in each arm, `p0` and `p1`
-  \item Per-stratum weights, `r0` and `r1`.
+  \item Per-stratum event rates, `r0` and `r1`.
   \item Stratum `weights`.
 }
 }

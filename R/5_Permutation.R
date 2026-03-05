@@ -8,9 +8,7 @@
 #' @param n0 Subjects per category in arm 0.
 #' @param y1 Events per category in arm 1.
 #' @param n1 Subjects per category in arm 1.
-#' @importFrom stats rhyper
 #' @return List containing the data after permutation.
-
 PermEvents <- function(y0, n0, y1, n1) {
   
   # Number of strata.
@@ -19,18 +17,9 @@ PermEvents <- function(y0, n0, y1, n1) {
   # Event and patient totals.
   yt <- y0 + y1
   nt <- n0 + n1
-  
-  # Draw number of events in arm 0.
-  aux <- function(i) {
-    rhyper(
-      nn = 1,
-      m = yt[i],
-      n = nt[i] - yt[i],
-      k = n0[i]
-    )
-  }
-  
-  y0_perm <- sapply(seq_len(k), aux)
+
+  # Draw number of events in arm 0 (vectorized).
+  y0_perm <- stats::rhyper(nn = k, m = yt, n = nt - yt, k = n0)
   y1_perm <- yt - y0_perm
   
   out <- list(
@@ -52,17 +41,16 @@ PermEvents <- function(y0, n0, y1, n1) {
 #' @param y1 Events per category in arm 1.
 #' @param n1 Subjects per category in arm 1.
 #' @param weights Stratum mixing weights.
-#' @param alpha Type 1 error rate.
+#' @param alpha Type I error rate.
 #' @param reps Permutation replicates.
-#' @importFrom stats quantile sd
-#' @return Data.frame containing:
-
-Test.Null <- function(
+#' @return Data.frame containing the marginal contrast estimates and permutation
+#'   p-values for the risk difference, risk ratio, and odds ratio.
+TestNull <- function(
   y0,
-  n0, 
-  y1, 
-  n1, 
-  weights = weights,
+  n0,
+  y1,
+  n1,
+  weights = NULL,
   alpha = 0.05,
   reps
 ) {
@@ -110,10 +98,12 @@ Test.Null <- function(
   }
   sim <- lapply(seq_len(reps), aux)
   sim <- do.call(rbind, sim)
+  # Pseudo-count to avoid p-value of zero (standard practice for permutation tests).
   sim <- rbind(c(1, 1, 1), sim)
-  
+
   # Output
   out <- obs_stats[, 1:2]
   out$P <- apply(sim, 2, mean)
   return(out)
 }
+
