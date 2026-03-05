@@ -1,7 +1,7 @@
 ---
 title: "MargRates: Marginal Event Rates and Stratified Comparisons"
 author: "Zachary McCaw"
-date: "`r Sys.Date()`"
+date: "2026-03-05"
 output:
   rmarkdown::html_vignette:
     keep_md: true
@@ -11,12 +11,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup, include = FALSE}
-knitr::opts_chunk$set(
-  collapse = TRUE,
-  comment = "#>"
-)
-```
+
 
 ## Introduction
 
@@ -53,7 +48,8 @@ $$
 
 We illustrate with 28-day mortality from a COVID-19 trial, stratified by respiratory support at randomization. The data are stored as stratum-level event counts and sample sizes for the control arm (0) and the treatment arm (1).
 
-```{r data}
+
+``` r
 library(MargRates)
 
 # Event counts (y) and sample sizes (n) by stratum; arm 0 = control, arm 1 = treatment.
@@ -65,7 +61,8 @@ n1 <- c(324, 1279, 501)
 
 **Asymptotic analysis only:**
 
-```{r asymp}
+
+``` r
 out <- CompMargRates(
   y0 = y0,
   n0 = n0,
@@ -76,11 +73,31 @@ out <- CompMargRates(
   perm = FALSE
 )
 show(out)
+#> Marginal Rates:
+#>   Arm    N     Rates
+#> 1   0 4321 0.2567286
+#> 2   1 2104 0.2292085
+#> 
+#> 
+#> Risk Difference:
+#>       Method     Stat        Est         SE       Lower        Upper          P
+#> 1 Asymptotic RiskDiff -0.0275201 0.01121997 -0.04951084 -0.005529367 0.01417575
+#> 
+#> 
+#> Risk Ratio:
+#>       Method      Stat       Est         SE    Lower     Upper          P
+#> 2 Asymptotic RiskRatio 0.8928047 0.04218031 0.813845 0.9794251 0.01639499
+#> 
+#> 
+#> Odds Ratio:
+#>       Method      Stat       Est         SE     Lower     Upper          P
+#> 3 Asymptotic OddsRatio 0.8609283 0.05334131 0.7624797 0.9720881 0.01565469
 ```
 
 **With bootstrap and permutation** (for reproducibility, use a larger `reps` in practice):
 
-```{r boot_perm}
+
+``` r
 set.seed(2013)
 out_full <- CompMargRates(
   y0 = y0,
@@ -93,6 +110,35 @@ out_full <- CompMargRates(
   reps = 500
 )
 show(out_full)
+#> Marginal Rates:
+#>   Arm    N     Rates
+#> 1   0 4321 0.2567286
+#> 2   1 2104 0.2292085
+#> 
+#> 
+#> Risk Difference:
+#>       Method     Stat        Est         SE       Lower        Upper          P
+#> 1 Asymptotic RiskDiff -0.0275201 0.01121997 -0.04951084 -0.005529367 0.01417575
+#> 4  Bootstrap RiskDiff -0.0275201 0.01148952 -0.05250397 -0.005205896 0.00800000
+#> 
+#> 
+#> Risk Ratio:
+#>       Method      Stat       Est         SE     Lower     Upper          P
+#> 2 Asymptotic RiskRatio 0.8928047 0.04218031 0.8138450 0.9794251 0.01639499
+#> 5  Bootstrap RiskRatio 0.8928047 0.04314530 0.8021671 0.9787042 0.00800000
+#> 
+#> 
+#> Odds Ratio:
+#>       Method      Stat       Est         SE     Lower     Upper          P
+#> 3 Asymptotic OddsRatio 0.8609283 0.05334131 0.7624797 0.9720881 0.01565469
+#> 6  Bootstrap OddsRatio 0.8609283 0.05453990 0.7487346 0.9720065 0.00800000
+#> 
+#> 
+#> Permutation test:
+#>        Stat        Est          P
+#> 1  RiskDiff -0.0275201 0.01197605
+#> 2 RiskRatio  0.8928047 0.00998004
+#> 3 OddsRatio  0.8609283 0.01197605
 ```
 
 The output lists marginal rates in each arm and, for each contrast (risk difference, risk ratio, odds ratio), the estimate (Est), standard error (SE), confidence limits (Lower, Upper), and $p$-value (P). When `boot = TRUE`, bootstrap SEs and intervals are appended; when `perm = TRUE`, permutation $p$-values are given in the Permutation test section.
